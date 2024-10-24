@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,6 +15,10 @@ namespace Practic_Work_6._6
         const string filePath = @"c:\workers.txt";
         static void Main(string[] args)
         {
+            StartApplication();
+        }
+        static void StartApplication()
+        {
             Console.Write("Здравствуйте! Вы находитесь в управлении базой данных сотрудников компании ООО 'Разработка'\n" +
                 "Нажмите 1 - Вывод данных сотрудников на экран\n" +
                 "Нажмите 2 - Заполнить данные и добавить новую запись сотрудника\n" +
@@ -21,7 +26,7 @@ namespace Practic_Work_6._6
             try
             {
                 int choose = int.Parse(Console.ReadLine());
-                switch(choose)
+                switch (choose)
                 {
                     case 1:
                         ReadData();
@@ -33,25 +38,23 @@ namespace Practic_Work_6._6
                         string FullName = Console.ReadLine();
                         Console.Write("Введите рост сотрудника: ");
                         int Height = int.Parse(Console.ReadLine());
-                        Console.Write("Введите дату рождения сотрудника (Формат ДД.ММ.ГГГГ): ");
-                        string DateOfBirth = Console.ReadLine();
+                        var DateOfBirth = inputDoB();
                         Console.Write("Введите место рождения сотрудника: ");
                         string PlaceOfBirth = Console.ReadLine();
                         AddData(Id, FullName, Height, DateOfBirth, PlaceOfBirth);
                         break;
-                    default: 
+                    default:
                         Console.WriteLine("Выбор неверный! Перезапустите программу");
                         Console.ReadKey();
                         break;
                 }
             }
-            catch(FormatException ex) 
+            catch (FormatException ex)
             {
-                Console.WriteLine(ex.Message);
-                Console.ReadKey();
+                Console.WriteLine(ex.Message + " Введите любую клавишу для продолжения...");
+                StartApplication();
             }
         }
-
         static void ReadData()
         {
             if (File.Exists(filePath))
@@ -63,29 +66,43 @@ namespace Practic_Work_6._6
                     Console.WriteLine(id);
                 }
 
+                Console.WriteLine("Введите любую клавишу для продолжения...");
                 Console.ReadKey();
+                StartApplication();
             }
             else
             {
-                Console.WriteLine("База данных с сотрудниками компании ещё не создана!");
+                Console.WriteLine("Введите любую клавишу для продолжения...");
                 Console.ReadKey();
+                StartApplication();
             }
         }
-        static void AddData(int Id, string name, int height, string dateOfBirth, string placeOfBirth)
+        static void AddData(int Id, string name, int height, DateTime dateOfBirth, string placeOfBirth)
         {
             var today = DateTime.Today;
-            var age = today.Year - DateTime.Parse(dateOfBirth).Year;
-            if (DateTime.Parse(dateOfBirth).Date > today.AddYears(-age)) age--;
+            var age = today.Year - dateOfBirth.Year;
+            if (dateOfBirth.Date > today.AddYears(-age)) age--;
+            string splitter = "#";
 
-            File.AppendAllText(filePath, Id + "#" + 
-                DateTime.Now + "#" + 
-                name + "#" + 
-                age + "#" +
-                height + "#" +
-                dateOfBirth + "#" +
-                placeOfBirth + "\n");
-            Console.WriteLine("Запись сотрудника добавлена");
+            StringBuilder sb = new StringBuilder(Id + splitter + DateTime.Now + splitter + name + splitter + age + splitter + height + splitter +
+                dateOfBirth.ToString("dd.MM.yyyy") + splitter + placeOfBirth);
+            sb.Append("\n");
+            File.AppendAllText(filePath, sb.ToString());
+            Console.WriteLine("Запись сотрудника добавлена. Введите любую клавишу для продолжения...");
             Console.ReadKey();
+            StartApplication();
+        }
+        static DateTime inputDoB()
+        {
+            DateTime dob;
+            string input;
+            do
+            {
+                Console.WriteLine("Введите дату рождения сотрудника (Формат ДД.ММ.ГГГГ): ");
+                input = Console.ReadLine();
+            }
+            while (!DateTime.TryParseExact(input, "dd.MM.yyyy", null, DateTimeStyles.None, out dob));
+            return dob;
         }
     }
 }
